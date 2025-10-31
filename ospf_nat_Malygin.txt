@@ -1,0 +1,66 @@
+subnet routers:
+  (subintf settings)
+         interface GigabitEthernet0/1.34
+         encapsulation dot1Q 34
+         ip address 192.168.1.254 255.255.255.0
+        !
+        interface GigabitEthernet0/1.35
+         encapsulation dot1Q 35
+         ip address 192.168.2.126 255.255.255.128
+        !
+  (DHCP)
+        ip dhcp pool subnet1
+         network 192.168.1.0 255.255.255.0
+         default-router 192.168.1.254
+        ip dhcp pool subnet2
+         network 192.168.2.0 255.255.255.128
+         default-router 192.168.1.126
+  (loopback for ospf)
+        interface Loopback0
+         ip address 192.168.101.2 255.255.255.255
+  (ospf)
+        router ospf 1
+         network 192.168.1.0 0.0.0.255 area 0
+         network 192.168.2.0 0.0.0.127 area 0
+         network 192.168.4.0 0.0.0.3 area 0
+
+//////////////////////////////////////////
+
+for border router:
+  (gateway of last resort)
+        ip route 0.0.0.0 0.0.0.0 211.211.211.2
+  ()
+        router ospf 1
+        default-information originate 
+  ()
+        interface GigabitEthernet0/1/0
+         ip address 192.168.4.2 255.255.255.252
+         ip nat inside
+        !
+        interface GigabitEthernet0/2/0
+         ip address 192.168.4.6 255.255.255.252
+         ip nat inside
+        !
+        interface GigabitEthernet0/0
+         ip address 211.211.211.1 255.255.255.252
+         ip nat outside
+        !
+  (access list)
+        ip access-list standard NAT
+         permit 192.168.1.0 0.0.0.255
+         permit 192.168.2.0 0.0.0.127
+         permit 192.168.2.128 0.0.0.127
+         permit 192.168.3.0 0.0.0.15
+  (translation enabling command (dynamic NAT))
+        ip nat inside source list NAT interface gi0/0 overload
+
+
+
+
+
+
+
+
+
+
+
